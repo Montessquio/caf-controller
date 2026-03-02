@@ -1,0 +1,10 @@
+
+setup()
+{
+  __message "Setting up GECKOS2 flash";
+}
+
+execUserFlashInit()
+{
+  setup();
+}

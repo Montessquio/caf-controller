@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<flash_device>
+  <exe>${CMSIS_PACK_PATH_SiliconLabs#GeckoPlatform_EFR32BG22_DFP#2025.6.2}$\Flash\FlashGECKOS2.out</exe>
+  <page>4</page>
+  <block>2048 0x200</block>
+  <flash_base>0x00000000</flash_base>
+  <macro>${CMSIS_PACK_PATH_SiliconLabs#GeckoPlatform_EFR32BG22_DFP#2025.6.2}$\Flash\FlashGECKOS2.mac</macro>
+  <aggregate>1</aggregate>
+</flash_device>
+

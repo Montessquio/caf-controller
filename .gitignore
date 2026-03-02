@@ -1,0 +1,23 @@
+# Build outputs
+src/*.o
+firmware.elf
+firmware.bin
+firmware.map
+
+# Editor & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Clangd / compile commands
+compile_commands.json
+.cache/

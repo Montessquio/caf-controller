@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - "-I./vendor/gecko_sdk/platform/Device/SiliconLabs/EFR32BG22/Include"
+    - "-I./vendor/gecko_sdk/platform/common/inc"
+    - "-I./vendor/gecko_sdk/platform/CMSIS/Core/Include"
+    - "-I./vendor/gecko_sdk/platform/emlib/inc"
