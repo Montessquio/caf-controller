@@ -50,15 +50,86 @@ void rpl_header_ok(WiFiClient* client) {
   client->println();
 }
 
-void rpl_header_redirect(WiFiClient* client) {
+void rpl_header_redirect(WiFiClient* client, const char* path) {
   client->println("HTTP/1.1 301 Moved Permanently");
-  client->println("location: /");
+  client->print("location: ");
+  client->println(path);
   client->println("Content-Type: text/plain");
   client->println("Content-Length: 0");
   client->println("Connection: close");
   client->println();
 }
 
+void rpl_header_not_found(WiFiClient* client, const char* path) {
+  client->println("HTTP/1.1 404 Not Found");
+  client->print("location: ");
+  client->println(path);
+  client->println("Content-Type: text/plain");
+  client->println("Content-Length: 0");
+  client->println("Connection: close");
+  client->println();
+}
+
+void rpl_html_input(WiFiClient* client, char* type, char* id, char* name, char* currentValue) {
+  client->print("<input type=\"");
+  client->print(type);
+  client->print("\" id=\"");
+  client->print(id);
+  client->print("\" name=\"");
+  client->print(id);
+  client->print("\" value=\"");
+  client->print(currentValue);
+  client->println("\" />");
+
+  client->print("<label for=\"");
+  client->print(id);
+  client->print("\">");
+  client->print(name);
+  client->println("</label>");
+
+  client->println("<br />");
+}
+
+void rpl_html_btn(WiFiClient* client, char* type, char* id, char* name) {
+  client->print("<button type=\"");
+  client->print(type);
+  client->print("\" id=\"");
+  client->print(id);
+  client->print("\" >");
+  client->print(name);
+  client->println("</button>");
+}
+
+void rpl_html_form(WiFiClient* client) {
+  client->println("<form id=\"configForm\">");
+
+  itoa(regs.temp, itoabuf, 10);
+  rpl_html_input(client, "number", "temp", "Temp", itoabuf);
+
+  itoa(regs.wvot, itoabuf, 10);
+  rpl_html_input(client, "number", "wvot", "Water Valve Open Time", itoabuf);
+
+  itoa(regs.gdpb, itoabuf, 10);
+  rpl_html_input(client, "number", "gdpb", "Ground Weight Dispensed Per Brew", itoabuf);
+
+  itoa(regs.sbth, itoabuf, 10);
+  rpl_html_input(client, "number", "sbth", "Scheduled Brew Time (Hour)", itoabuf);
+
+  itoa(regs.sbtm, itoabuf, 10);
+  rpl_html_input(client, "number", "sbtm", "Scheduled Brew Time (Minute)", itoabuf);
+
+  itoa(regs.sbts, itoabuf, 10);
+  rpl_html_input(client, "number", "sbts", "Scheduled Brew Time (Second)", itoabuf);
+
+  itoa(regs.sbtd, itoabuf, 10);
+  rpl_html_input(client, "number", "sbtd", "Scheduled Brew Time (Days of the Week (bitfield))", itoabuf);
+
+  itoa(regs.ctrl, itoabuf, 10);
+  rpl_html_input(client, "number", "ctrl", "Control Register (bitfield)", itoabuf);
+
+  rpl_html_btn(client, "submit", "btnSubmit", "Submit");
+}
+ 
 void rpl_html_reg(WiFiClient* client, char* offset, char* name, char* value) {
   client->println("<tr>");
   client->println("<td>");
@@ -81,28 +152,28 @@ void rpl_html_regs(WiFiClient* client) {
   client->println("<th>VAL</th>");
   client->println("</tr>");
 
-  itoa(regs.TEMP, itoabuf, 10);
+  itoa(regs.temp, itoabuf, 10);
   rpl_html_reg(client, "0x00-0x01", "TEMP", itoabuf);
 
-  itoa(regs.WVOT, itoabuf, 10);
+  itoa(regs.wvot, itoabuf, 10);
   rpl_html_reg(client, "0x02-0x03", "WVOT", itoabuf);
 
-  itoa(regs.GDPB, itoabuf, 10);
+  itoa(regs.gdpb, itoabuf, 10);
   rpl_html_reg(client, "0x04-0x05", "GDPB", itoabuf);
 
-  itoa(regs.SBTH, itoabuf, 10);
+  itoa(regs.sbth, itoabuf, 10);
   rpl_html_reg(client, "0x06", "SBTH", itoabuf);
 
-  itoa(regs.SBTM, itoabuf, 10);
+  itoa(regs.sbtm, itoabuf, 10);
   rpl_html_reg(client, "0x07", "SBTM", itoabuf);
 
-  itoa(regs.SBTS, itoabuf, 10);
+  itoa(regs.sbts, itoabuf, 10);
   rpl_html_reg(client, "0x08", "SBTS", itoabuf);
 
-  itoa(regs.SBTD, itoabuf, 10);
+  itoa(regs.sbtd, itoabuf, 10);
   rpl_html_reg(client, "0x09", "SBTD", itoabuf);
 
-  itoa(regs.CTRL, itoabuf, 2);
+  itoa(regs.ctrl, itoabuf, 2);
   rpl_html_reg(client, "0x0A", "CTRL", itoabuf);
 
   client->println("</table>");
@@ -116,13 +187,18 @@ void rpl_html(WiFiClient* client, String* path) {
   client->println("<h1>SMART Coffee UI</h1>");
   client->println("<p>Path: " + *path + "</p>");
   client->println("<p>Uptime: " + String(millis() / 1000) + " seconds</p>");
+  rpl_html_form(client);
+  client->println("<br />");
   rpl_html_regs(client);
   client->println("</body>");
   client->println("</html>");
 }
 
-void rpl_err(WiFiClient* client, int err) {
-  // TODO
+void rpl_err(WiFiClient* client, char* trace, int err) {
+  client->print(trace);
+  itoa(err, itoabuf, 10);
+  client->println(itoabuf);
+  client->stop();
 }
 
 void rpl_end(WiFiClient* client) {
@@ -130,19 +206,42 @@ void rpl_end(WiFiClient* client) {
 }
 
 int rpl_handle(WiFiClient* client, String* path) {
-  if (*path == "/" || *path == "") {
+  const char * cpath = path->c_str();
+
+  // Handle root
+  if (strlen(cpath) == 0 || strcmp(cpath, "/") == 0) {
+    Serial.println("Got ROOT");
     rpl_header_ok(client);
     rpl_html(client, path);
-  } else {
-    CtrlParams params;
+    rpl_end(client);
+    return 0;
+  }
+  
+  // Handle data submission
+  if(strncmp("/?", cpath, strlen("/?")) == 0){
+    Serial.println("Got PARAM");
+    IFaceRegs params;
+    
     int result;
     if ((result = http_getCtrlParams(path, &params)) != 0) {
-      rpl_err(client, result);
+      rpl_err(client, "ECPRM", result);
     } else {
-      rpl_header_redirect(client);
+
+      if ((result = api_apply(client, &params, &regs)) != 0) {
+        rpl_err(client, "ECPRM", result);
+      }
+      
+      rpl_header_ok(client);
+      rpl_html(client, path);
     }
+    rpl_end(client);
+    return 0;
   }
+
+  // Handle everything else
+  rpl_header_not_found(client, cpath);
   rpl_end(client);
+  return 0;
 }
 
 void handle_client(WiFiClient client) {

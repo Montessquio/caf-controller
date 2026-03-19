@@ -36,97 +36,85 @@ int http_getLine(WiFiClient* client, String* buf) {
       }
     }
   }
+  return n;
 }
 
-int http_getSegment(String* path, int& startIndex, String& output, bool isLast = false) {
-  if (startIndex >= path->length()) return -1;
+int http_getQueryParam(String* queryString, const char* paramName, String& output) {
+  Serial.print("Extracting ");
+  Serial.println(paramName);
+  
+  if (queryString == NULL || queryString->length() == 0) {
+    return ERR_EMPTY_STRING;
+  }
 
-  int endIndex = path->indexOf('/', startIndex);
+  // Find the parameter name in the query string
+  String searchKey = String(paramName) + "=";
+  int paramStart = queryString->indexOf(searchKey);
+  
+  if (paramStart == -1) {
+    return ERR_PARAM_NOT_FOUND;  // Parameter not found
+  }
 
-  if (endIndex == -1 && !isLast) return -1;
+  // Move past the parameter name and '='
+  paramStart += searchKey.length();
 
-  // Extract the segment
-  if (endIndex == -1) {
-    output = path->substring(startIndex);  // Get rest of string
+  // Find the end of the parameter value (next '&' or end of string)
+  int paramEnd = queryString->indexOf('&', paramStart);
+  
+  if (paramEnd == -1) {
+    // This is the last parameter
+    output = queryString->substring(paramStart);
   } else {
-    output = path->substring(startIndex, endIndex);
+    output = queryString->substring(paramStart, paramEnd);
   }
 
-  // Check for empty segment
-  if (output.length() == 0) return ERR_EMPTY_SEGMENT;
-
-  startIndex = (endIndex == -1) ? path->length() : endIndex + 1;
-
-  return 0;
-}
-
-int http_parse_act(String* act, uint8_t* out) {
-  if (*act == "get") *out = ACT_GET;
-  else if (*act == "put") *out = ACT_PUT;
-  else if (*act == "tgl") *out = ACT_TGL;
-  else if (*act == "set") *out = ACT_SET;
-  else return ERR_UNKNOWN_ACT;
-
-  return 0;
-}
-
-int http_parse_ctrl(String* ctrl, uint8_t* out) {
-  if (*ctrl == "temp") *out = KWD_TEMP;
-  else if (*ctrl == "wvot") *out = KWD_WVOT;
-  else if (*ctrl == "gdpb") *out = KWD_GDPB;
-  else if (*ctrl == "sbth") *out = KWD_SBTH;
-  else if (*ctrl == "sbtm") *out = KWD_SBTM;
-  else if (*ctrl == "sbts") *out = KWD_SBTS;
-  else if (*ctrl == "sbtd") *out = KWD_SBTD;
-  else if (*ctrl == "ctrl") *out = KWD_CTRL;
-  else return ERR_UNKNOWN_CTRL;
-
-  return 0;
-}
-
-int http_parse_value(String* value, uint8_t* ctrl, uint16_t* out) {
-  switch (*ctrl) {
-    case KWD_TEMP:
-    case KWD_WVOT:
-    case KWD_GDPB:
-      {
-        uint16_t p16 = 0;
-        if (!parseIntSafe(value, &p16)) return ERR_PARSE_INT;
-        *out = p16;
-        break;
-      }
-    case KWD_SBTH:
-    case KWD_SBTM:
-    case KWD_SBTS:
-    case KWD_SBTD:
-    case KWD_CTRL:
-      {
-        uint8_t p8 = 0;
-        if (!parseIntSafe(value, &p8)) return ERR_PARSE_INT;
-        *out = p8;
-        break;
-      }
-    default:
-      return ERR_UNKNOWN_CTRL;
+  // Check for empty value
+  if (output.length() == 0) {
+    return ERR_EMPTY_PARAM;
   }
+
+  return 0;
 }
 
-int http_getCtrlParams(String* path, CtrlParams* params) {
+int http_getCtrlParams(String* queryString, IFaceRegs* params) {
   // Validate input
-  if (path == NULL) return ERR_NULL_POINTER;
-  if (path->length() == 0) return ERR_EMPTY_STRING;
+  if (queryString == NULL) return ERR_NULL_POINTER;
+  if (params == NULL) return ERR_NULL_POINTER;
+  if (queryString->length() == 0) return ERR_EMPTY_STRING;
 
-  // Extract parameter values
-  int startIndex = 0;
-  String act, part, value;
-  int result;
-  HTTP_RET_IF_ERR(http_getSegment(path, startIndex, act));
-  HTTP_RET_IF_ERR(http_getSegment(path, startIndex, part));
-  HTTP_RET_IF_ERR(http_getSegment(path, startIndex, value, true));
+  String value;
 
-  HTTP_RET_IF_ERR(http_parse_act(&act, &(params->ACT)));
-  HTTP_RET_IF_ERR(http_parse_ctrl(&part, &(params->CTRL)));
-  HTTP_RET_IF_ERR(http_parse_value(&value, &(params->ACT), &(params->VALUE)));
+  // Parse temp (uint16_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "temp", value));
+  if (!parseIntSafe(&value, &(params->temp))) return ERR_PARSE_INT;
+
+  // Parse wvot (uint16_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "wvot", value));
+  if (!parseIntSafe(&value, &(params->wvot))) return ERR_PARSE_INT;
+
+  // Parse gdpb (uint16_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "gdpb", value));
+  if (!parseIntSafe(&value, &(params->gdpb))) return ERR_PARSE_INT;
+
+  // Parse sbth (uint8_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "sbth", value));
+  if (!parseIntSafe(&value, &(params->sbth))) return ERR_PARSE_INT;
+
+  // Parse sbtm (uint8_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "sbtm", value));
+  if (!parseIntSafe(&value, &(params->sbtm))) return ERR_PARSE_INT;
+
+  // Parse sbts (uint8_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "sbts", value));
+  if (!parseIntSafe(&value, &(params->sbts))) return ERR_PARSE_INT;
+
+  // Parse sbtd (uint8_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "sbtd", value));
+  if (!parseIntSafe(&value, &(params->sbtd))) return ERR_PARSE_INT;
+
+  // Parse ctrl (uint8_t)
+  HTTP_RET_IF_ERR(http_getQueryParam(queryString, "ctrl", value));
+  if (!parseIntSafe(&value, &(params->ctrl))) return ERR_PARSE_INT;
 
   return 0;
 }

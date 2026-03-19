@@ -44,26 +44,28 @@
 #define ERR_UNKNOWN_ACT       -8
 #define ERR_UNKNOWN_CTRL      -9
 #define ERR_PARSE_INT        -10
+#define ERR_PARAM_NOT_FOUND  -11
+#define ERR_EMPTY_PARAM      -12
 
 #define u16_write(s, v) (uint16_t* s)
 
 struct IFaceRegs {
   /// Temperature to keep the
   /// reservoir at.
-  uint16_t TEMP;
+  uint16_t temp;
 
   /// Water valve open-time (ms)
-  uint16_t WVOT;
+  uint16_t wvot;
 
   /// Amount of grounds to dispense
   /// per brew (sensor unit)
-  uint16_t GDPB;
+  uint16_t gdpb;
   
   /// Scheduled brew time (H, M, S)
-  uint8_t SBTH;
-  uint8_t SBTM;
-  uint8_t SBTS;
-  uint8_t SBTD; // Days of the week (bitfield)
+  uint8_t sbth;
+  uint8_t sbtm;
+  uint8_t sbts;
+  uint8_t sbtd; // Days of the week (bitfield)
 
   /// Control bitflags (as 1 / 0), write-only.
   /// Bit 0: Start/Stop Brew
@@ -73,14 +75,8 @@ struct IFaceRegs {
   /// Bit 4: Pause/Resume Reservoir Heating
   /// Bit 5-6: Reserved
   /// Bit 7: Start Clean Cycle
-  uint8_t CTRL;
-};
-
-struct CtrlParams {
-  uint8_t  ACT;
-  uint8_t  CTRL;
-  uint16_t VALUE;
+  uint8_t ctrl;
 };
 
 int http_getLine(WiFiClient* client, String* buf);
-int http_getCtrlParams(String* path, CtrlParams* params);
+int http_getCtrlParams(String* path, IFaceRegs* params);
