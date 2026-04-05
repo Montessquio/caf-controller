@@ -1,0 +1,80 @@
+CompileFlags:
+  Add:
+    # Project directory
+    - -I/home/monty/Projects/school/capstone/src/wifi_peripheral
+    
+    # Arduino ESP32 core
+    - -I/home/monty/.arduino15/packages/esp32/hardware/esp32/3.3.7/cores/esp32
+    - -I/home/monty/.arduino15/packages/esp32/hardware/esp32/3.3.7/variants/XIAO_ESP32C3
+    
+    # ESP32 libraries
+    - -I/home/monty/.arduino15/packages/esp32/hardware/esp32/3.3.7/libraries/WiFi/src
+    - -I/home/monty/.arduino15/packages/esp32/hardware/esp32/3.3.7/libraries/Network/src
+    
+    # ESP-IDF base path
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/qio_qspi/include
+    
+    # ESP-IDF components
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/freertos/config/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/freertos/FreeRTOS-Kernel/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_hw_support/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/soc/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/soc/esp32c3/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/hal/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_rom/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_common/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_system/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_timer/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/lwip/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/lwip/lwip/src/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/driver/deprecated
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_wifi/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_netif/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_event/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/nvs_flash/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/esp_http_server/include
+    - -I/home/monty/.arduino15/packages/esp32/tools/esp32c3-libs/3.3.7/include/log/include
+    
+    # Arduino defines
+    - -DF_CPU=160000000L
+    - -DARDUINO=10607
+    - -DARDUINO_XIAO_ESP32C3
+    - -DARDUINO_ARCH_ESP32
+    - -DARDUINO_BOARD="XIAO_ESP32C3"
+    - -DARDUINO_VARIANT="XIAO_ESP32C3"
+    - -DARDUINO_PARTITION_default
+    - -DARDUINO_HOST_OS="linux"
+    - -DARDUINO_FQBN="esp32:esp32:XIAO_ESP32C3"
+    - -DESP32=ESP32
+    - -DCORE_DEBUG_LEVEL=0
+    - -DARDUINO_USB_MODE=1
+    - -DARDUINO_USB_CDC_ON_BOOT=1
+    
+    # ESP-IDF defines
+    - -DESP_PLATFORM
+    - -DIDF_VER="v5.5.2-729-g87912cd291"
+    - -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h"
+    - -D_GNU_SOURCE
+    
+  Remove:
+    # Remove ARM-specific flags
+    - -mcpu=*
+    - -mfloat-abi=*
+    - -mfpu=*
+    - -march=rv32imc_zicsr_zifencei
+    - -fstrict-volatile-bitfields
+    - -fno-jump-tables
+    - -fno-tree-switch-conversion
+    - -freorder-blocks
+    - -nostartfiles
+    - -std=gnu++2b
+    - -std=gnu++2a
+
+# Special handling for .ino files - treat as C++
+---
+If:
+  PathMatch: .*\.ino
+CompileFlags:
+  Add:
+    - -xc++
